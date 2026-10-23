@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>探索新道路 · 鲜彩纸片庆祝</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#e0e8d4;color:#29482e;font:14px system-ui;display:flex;justify-content:center;gap:22px;align-items:center;min-height:100vh;padding:12px}
+  canvas{width:min(375px,65vw);height:auto;border-radius:16px}aside{width:215px}h1{font-size:19px}p{color:#617654;line-height:1.8}button,select{background:#142630;border:1px solid #29434c;color:#ecf4e9;border-radius:9px;padding:10px;margin:4px 0;cursor:pointer}button{width:100%}button:first-of-type{background:#80dfc1;color:#16352c}input{width:100%}@media(max-width:540px){body{flex-direction:column}canvas{width:min(375px,92vw)}aside{width:min(375px,92vw)}}
+</style>
+<canvas id="scene" width="750" height="1360" aria-label="通关鲜彩纸片与星星预览"></canvas>
+<aside><h1>鲜彩纸片，短暂庆祝</h1><p>彩纸从下方和两侧喷发约 1 秒，翻面、旋转后自然散尽，5 秒后停止。文字附近会柔和减淡。</p>
+<button id="replay">重新播放动画</button><button id="theme">切换黑夜效果</button>
+<button data-time="280">左星飞入</button><button data-time="2000">彩纸喷发效果</button><button data-time="1480">右星第二个填入</button><button data-time="2480">中间最后填入</button><button data-time="6000">6 秒后彩纸散尽</button>
+<p><label>获得星数 <select id="score"><option>3</option><option>2</option><option>1</option></select></label></p>
+<label>动画进度 <input id="time" type="range" min="0" max="15000" value="0" step="10"></label><output id="stamp">0.00 秒</output>
+<p>效果预览不读取或修改游戏存档。</p></aside>
+<script src="/miniprogram/core/levels.js"></script><script src="/miniprogram/core/engine.js"></script><script src="/miniprogram/core/session.js"></script><script src="/miniprogram/core/profile.js"></script><script src="/miniprogram/core/motion.js"></script><script src="/miniprogram/core/animals.js"></script><script src="/miniprogram/core/homecoming.js"></script><script src="/miniprogram/core/renderer.js"></script><script src="/minigame/src/view.js"></script>
+<script>
+  const canvas=document.getElementById('scene'),ctx=canvas.getContext('2d'),session=new LightSession.Session(null,3);
+  const answer=LightEngine.solve(session.game.level,session.game.pieces);
+  for(const step of answer.changes)for(let i=0;i<step.turns;i++)session.act('rotate',step.x,step.y);
+  const originalView=session.view.bind(session),score=document.getElementById('score');
+  session.view=()=>({...originalView(),stars:Number(score.value)});
+  const base=Date.now(),profile=new LightProfile.Profile(null,session.progress,base);
+  const app={width:375,height:680,top:28,bottom:12,screen:'game',session,campaign:session,profile,notice:'',celebration:{game:session.game,startedAt:base,reward:15}};
+  const slider=document.getElementById('time'),stamp=document.getElementById('stamp');
+  let elapsed=0,started=performance.now(),playing=true;
+  function draw(){ctx.setTransform(2,0,0,2,0,0);LumenView.render(ctx,app,LightRenderer,base+elapsed);slider.value=elapsed;stamp.textContent=(elapsed/1000).toFixed(2)+' 秒';}
+  function pauseAt(time){playing=false;elapsed=time;draw();}
+  document.getElementById('theme').onclick=()=>{profile.toggleNightMode();draw();};
+  document.getElementById('replay').onclick=()=>{elapsed=0;started=performance.now();playing=true;};
+  document.querySelectorAll('[data-time]').forEach(button=>button.onclick=()=>pauseAt(Number(button.dataset.time)));
+  slider.oninput=()=>pauseAt(Number(slider.value));score.onchange=draw;
+  function frame(now){if(playing){elapsed=now-started;draw();}requestAnimationFrame(frame);}
+  requestAnimationFrame(frame);
+</script>
+</html>

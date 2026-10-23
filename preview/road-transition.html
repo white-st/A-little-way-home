@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>探索新道路 · 小路平滑接通</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:28px;background:#edf3e4;color:#29482e;font:14px system-ui}main{max-width:1100px;margin:auto}h1{font-size:26px;margin:0 0 8px}p{color:#617654;line-height:1.8}nav{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}button,a{border:1px solid #b8cfa5;border-radius:10px;background:#f9fbf3;color:#29482e;padding:10px 16px;cursor:pointer;text-decoration:none}section{display:flex;gap:18px;flex-wrap:wrap}article{flex:1;min-width:260px;background:#f8fbef;border-radius:22px;padding:16px}h2{font-size:15px;margin:0 0 12px}canvas{width:100%;display:block;border-radius:14px}footer{margin-top:18px;color:#617654}
+</style>
+<main><h1>小路接通，柔和变深</h1><p>旋转与颜色同时过渡。沿路变为深棕色，保留泥土纹理与草地。</p>
+<nav><button id="three">3 × 3</button><button id="nine">9 × 9</button><button id="theme">切换黑夜</button><button id="play">播放接通过程</button><button id="undo">播放断开过程</button><a href="/preview/grass-roads.html">进入完整游戏</a></nav>
+<section><article><h2>刚开始</h2><canvas id="start" aria-label="刚开始接通的道路"></canvas></article><article><h2 id="middle-title">过渡中</h2><canvas id="middle" aria-label="颜色渐变中的道路"></canvas></article><article><h2>完成过渡</h2><canvas id="end" aria-label="接通后深棕色道路"></canvas></article></section>
+<footer id="status" role="status">同一个关卡、实际游戏绘制；独立演示，不写入游戏存档。</footer></main>
+<script src="/miniprogram/core/levels.js"></script><script src="/miniprogram/core/engine.js"></script><script src="/miniprogram/core/motion.js"></script><script src="/miniprogram/core/animals.js"></script><script src="/miniprogram/core/renderer.js"></script>
+<script>
+const canvases=['start','middle','end'].map(id=>document.getElementById(id));
+let size=3,light=true,frame=0;
+function prepare(canvas,disconnect=false){
+  const level=LightLevels.find(l=>l.size===size),game=LightEngine.createGame(level);
+  game.pieces.forEach((p,i)=>{p.orientation=level.solution[i];});
+  const source=game.pieces.find(p=>p.x===level.source.x&&p.y===level.source.y);
+  const leaf=game.pieces.find(p=>p!==source&&[1,2,4,8].includes(p.ports));
+  leaf.orientation=(leaf.orientation+1)%4;
+  if(!disconnect)source.orientation=(source.orientation+3)%4;
+  game.result=LightEngine.trace(level,game.pieces);
+  const width=canvas.getBoundingClientRect().width,dpr=devicePixelRatio;
+  canvas.width=Math.round(width*dpr);canvas.height=canvas.width;
+  const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  LightRenderer.resetMotion(ctx);LightRenderer.render(ctx,width,game,0,{light});
+  LightEngine.rotate(game,source.x,source.y);
+  LightRenderer.render(ctx,width,game,10,{light});
+  return elapsed=>LightRenderer.render(ctx,width,game,10+elapsed,{light});
+}
+function stages(disconnect=false){
+  cancelAnimationFrame(frame);
+  canvases.forEach((canvas,i)=>prepare(canvas,disconnect)(i*LightMotion.CONNECT_MS/2));
+  document.getElementById('middle-title').textContent='过渡中';
+}
+function play(disconnect){
+  stages(disconnect);const draw=prepare(canvases[1],disconnect);let started;
+  function tick(now){
+    if(started===undefined)started=now;
+    draw(now-started);
+    document.getElementById('middle-title').textContent=now-started<LightMotion.CONNECT_MS?'正在过渡…':'过渡完成';
+    if(now-started<LightMotion.CONNECT_MS+300)frame=requestAnimationFrame(tick);
+  }
+  frame=requestAnimationFrame(tick);
+}
+document.getElementById('three').onclick=()=>{size=3;stages();};
+document.getElementById('nine').onclick=()=>{size=9;stages();};
+document.getElementById('theme').onclick=()=>{light=!light;stages();};
+document.getElementById('play').onclick=()=>play(false);
+document.getElementById('undo').onclick=()=>play(true);
+window.addEventListener('resize',()=>stages());window.addEventListener('pagehide',()=>cancelAnimationFrame(frame));stages();
+</script></html>

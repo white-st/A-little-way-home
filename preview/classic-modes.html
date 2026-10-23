@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>探索新道路 · 经典双模式</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#e0e8d4;color:#29482e;font:14px system-ui;display:flex;justify-content:center;align-items:center;gap:24px;min-height:100vh;padding:16px}canvas{display:block;width:375px;height:680px;max-width:92vw;touch-action:none;border-radius:18px;box-shadow:0 12px 50px #29482e20}aside{width:230px}h1{font-size:24px}p{color:#617654;line-height:1.8}button{width:100%;padding:12px;margin:4px 0;border:1px solid #b8cfa5;border-radius:10px;background:#f6faed;color:#29482e;cursor:pointer}@media(max-width:650px){body{flex-direction:column}aside{width:min(375px,92vw)}}
+</style>
+<canvas id="game" aria-label="经典双模式：选择限步挑战或休闲模式"></canvas>
+<aside><h1>两种游玩心情</h1><p>经典棋盘从 5×5 开始。三星目标按每盘最少解法计算，二倍内二星。限步挑战最多三倍步数；休闲模式不限步数。</p><button id="fresh">重置独立演示</button><button id="finish">按最短路线接通</button><button id="exhaust">消耗超过三星目标的三倍步数</button><button id="compact">紧凑手机视窗</button><p id="status"></p><p>演示工具只在此网页提供，不进入微信游戏，也不修改玩家存档。</p></aside>
+<script src="/miniprogram/core/levels.js"></script><script src="/miniprogram/core/engine.js"></script><script src="/miniprogram/core/session.js"></script><script src="/miniprogram/core/profile.js"></script><script src="/miniprogram/core/classic.js"></script><script src="/miniprogram/core/motion.js"></script><script src="/miniprogram/core/animals.js"></script><script src="/miniprogram/core/homecoming.js"></script><script src="/miniprogram/core/renderer.js"></script><script src="/miniprogram/core/sound.js"></script><script src="/miniprogram/core/music.js"></script><script src="/preview/sound-player.js"></script><script src="/preview/minigame-platform.js"></script><script src="/minigame/src/view.js"></script><script src="/minigame/src/application.js"></script>
+<script>
+const store=new Map(),canvas=document.getElementById('game'),platform=createMinigamePreviewPlatform(canvas);
+platform.getStorageSync=key=>store.get(key);platform.setStorageSync=(key,value)=>store.set(key,structuredClone(value));
+let app;
+function start(){
+  if(app)app.destroy();store.clear();store.set(LightSound.STORAGE_KEY,false);store.set(LightMusic.STORAGE_KEY,false);
+  app=new LumenGame.GameApp(platform,{request:cb=>requestAnimationFrame(cb),cancel:id=>cancelAnimationFrame(id)});
+  app.start();app.command('classic-modes');
+}
+document.getElementById('fresh').onclick=start;
+document.getElementById('compact').onclick=()=>{canvas.style.width='320px';canvas.style.height='568px';app.resize();};
+document.getElementById('finish').onclick=()=>{
+  if(app.screen!=='game'||app.session===app.campaign||app.session.failed)return;
+  const answer=LightEngine.solve(app.session.level,app.session.game.pieces);
+  for(const step of answer.changes)for(let i=0;i<step.turns;i++)app.act('rotate',step.x,step.y);
+};
+document.getElementById('exhaust').onclick=()=>{
+  if(app.screen!=='game'||app.session===app.campaign)return;
+  const limit=app.session.level.par*3+1;
+  for(let i=0;i<limit;i++)app.act('rotate',0,0);
+};
+const ticker=setInterval(()=>{
+  const view=app.session.view();document.getElementById('status').textContent=view.classic?
+    `${view.modeName} · ${view.moves} 步 · ${view.failed?'挑战失败':view.solved?'成功：'+view.stars+' 星':'仍可继续'}`:'请选择一种模式';
+},250);
+start();window.addEventListener('pagehide',()=>{clearInterval(ticker);app.destroy();});
+</script>
+</html>

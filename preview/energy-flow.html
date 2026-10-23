@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>探索新道路 · 补给后继续预览</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#071117;color:#ecf4e9;font:14px system-ui;display:flex;justify-content:center;align-items:center;gap:22px;min-height:100vh;padding:12px}canvas{display:block;width:375px;height:680px;max-width:92vw;touch-action:none;border-radius:16px}aside{width:215px}h1{font-size:20px}p{color:#92aaa9;line-height:1.9}button{padding:12px;border:0;border-radius:10px;background:#80dfc1;color:#16352c;cursor:pointer}@media(max-width:650px){body{flex-direction:column}aside{width:min(375px,92vw)}}
+</style>
+<canvas id="game" aria-label="体力补给与继续下一关"></canvas>
+<aside><h1>补充后直接继续</h1><p>演示已通过第一关，但进入下一关时体力不足。点击测试补给，再点击顶部「继续下一关」。</p><p id="version"></p><button id="develop">开发版</button> <button id="trial">体验版</button> <button id="release">正式版</button><p><button id="compact">紧凑手机视窗</button></p><p>本页使用独立临时档案。版本开关仅在浏览器演示中提供，不进入微信游戏。</p></aside>
+<script src="/miniprogram/core/levels.js"></script><script src="/miniprogram/core/engine.js"></script><script src="/miniprogram/core/session.js"></script><script src="/miniprogram/core/profile.js"></script><script src="/miniprogram/core/classic.js"></script><script src="/miniprogram/core/motion.js"></script><script src="/miniprogram/core/animals.js"></script><script src="/miniprogram/core/homecoming.js"></script><script src="/miniprogram/core/renderer.js"></script><script src="/miniprogram/core/sound.js"></script><script src="/miniprogram/core/music.js"></script><script src="/preview/sound-player.js"></script><script src="/preview/minigame-platform.js"></script><script src="/minigame/src/view.js"></script><script src="/minigame/src/application.js"></script>
+<script>
+  const store=new Map(),canvas=document.getElementById('game'),platform=createMinigamePreviewPlatform(canvas);
+  platform.getStorageSync=key=>store.get(key);platform.setStorageSync=(key,value)=>store.set(key,structuredClone(value));
+  let app,version='develop';
+  platform.getAccountInfoSync=()=>({miniProgram:{envVersion:version}});
+  function reset(value='develop'){
+    version=value;document.getElementById('version').textContent='当前模拟版本：'+value;
+    if(app)app.destroy();store.clear();
+    const profile=new LightProfile.Profile(null,Array(140).fill(0)).data;profile.energy=1;profile.diamonds=40;
+    store.set(LightProfile.STORAGE_KEY,profile);store.set(LightSound.STORAGE_KEY,false);store.set(LightMusic.STORAGE_KEY,false);
+    app=new LumenGame.GameApp(platform,{request:cb=>requestAnimationFrame(cb),cancel:id=>cancelAnimationFrame(id)});
+    app.start();app.openCampaign();app.resume();app.act('rotate',1,1);
+    app.homecoming.advance(app.homecoming.lastTime+app.homecoming.duration,true);app.draw();app.act('next');
+  }
+  for(const version of ['develop','trial','release'])document.getElementById(version).onclick=()=>reset(version);
+  document.getElementById('compact').onclick=()=>{canvas.style.width='320px';canvas.style.height='568px';app.resize();};reset();
+  window.addEventListener('pagehide',()=>app.destroy());
+</script>
+</html>

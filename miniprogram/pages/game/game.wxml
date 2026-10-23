@@ -1,0 +1,33 @@
+<view class="game" wx:if="{{view}}">
+  <view class="topline"><view class="wordmark"><text class="brand-mark">◉</text> 循光 <text class="english">LUMEN</text></view><button class="text-button" bindtap="toggleLevels">关卡 {{view.number}} / {{view.totalText}}</button></view>
+  <view class="intro"><text class="eyebrow">{{view.chapter}}</text><view class="title">{{view.name}}<text class="title-dot">.</text></view><text class="description">{{view.description}}</text></view>
+  <view class="board-card">
+    <view class="board-top"><text><text class="live-dot">●</text> 线路实验室 {{view.size}} × {{view.size}}</text><text class="counter">点亮 {{view.lit}} / {{view.nodes}}</text></view>
+    <view class="audio-controls">
+      <view class="audio-row"><button class="sound-toggle {{musicEnabled ? '' : 'muted-sound'}}" bindtap="toggleMusic" aria-label="{{musicEnabled ? '背景音乐已开启，点击关闭' : '背景音乐已关闭，点击开启'}}"><text class="music-note">♪</text><text>音乐 {{musicEnabled ? '开' : '关'}}</text><view class="sound-track"><view></view></view></button><slider class="volume-slider" min="0" max="100" step="1" value="{{musicVolume}}" data-kind="music" bindchanging="onVolume" bindchange="onVolume" activeColor="#dcc38f" backgroundColor="#344852" block-color="#f4dfac" block-size="16" aria-label="背景音乐音量"/><text class="volume-value">{{musicVolume}}%</text></view>
+      <view class="audio-row"><button class="sound-toggle {{soundEnabled ? '' : 'muted-sound'}}" bindtap="toggleSound" aria-label="{{soundEnabled ? '音效已开启，点击关闭' : '音效已关闭，点击开启'}}"><view class="sound-bars"><view></view><view></view><view></view></view><text>音效 {{soundEnabled ? '开' : '关'}}</text><view class="sound-track"><view></view></view></button><slider class="volume-slider" min="0" max="100" step="1" value="{{soundVolume}}" data-kind="sound" bindchanging="onVolume" bindchange="onVolume" activeColor="#78ddc5" backgroundColor="#344852" block-color="#a5efd9" block-size="16" aria-label="音效音量"/><text class="volume-value">{{soundVolume}}%</text></view>
+    </view>
+    <view class="board-wrap"><canvas id="board" type="2d" class="board" bindtouchstart="onBoardStart" bindtouchend="onBoardTouch" bindtouchcancel="onBoardCancel"></canvas></view>
+    <view class="board-bottom"><text>轻触线路 · 顺时针旋转 90°</text><text>{{view.moves}} <text class="muted">次旋转</text></text></view>
+  </view>
+  <view class="legend"><text><text class="network-dot power"></text>中央电源</text><text><text class="network-dot connected"></text>已通电</text><text><text class="network-dot disconnected"></text>未通电</text></view>
+  <view class="direction-rule">接口相对才能连通 · 全部节点亮起即可过关</view>
+  <view class="success" wx:if="{{view.solved}}"><view class="success-top"><view><text class="eyebrow">{{view.last ? '旅程完成' : '全网已接通'}}</text><view class="success-title">{{view.last ? '整片星河，都亮起来了。' : '每个节点，都有了光。'}}</view></view><text class="stars">{{view.starText}}</text></view><text class="success-note">{{view.moves}} 次旋转 · {{view.stars === 3 ? '完美路线' : '再试一次，挑战三星'}}<text wx:if="{{view.last}}"> · 已完成全部 {{view.total}} 关</text></text><button class="primary" data-action="{{view.last ? 'reset' : 'next'}}" bindtap="onAction">{{view.last ? '再玩一次' : '前往下一关'}}</button></view>
+  <view class="tip" wx:else><text class="tip-icon">✦</text><view><view class="tip-label">一点灵感</view><text>{{view.tip}}</text></view></view>
+  <view class="actions"><button class="secondary" data-action="undo" disabled="{{!view.canUndo}}" bindtap="onAction">撤销</button><button class="secondary" data-action="reset" bindtap="onAction">重置</button><button class="secondary hint-button" data-action="hint" disabled="{{view.solved}}" bindtap="onAction">✦ 提示</button></view>
+  <view class="footnote">不赶时间，慢慢让光找到路。<text>无提示 · {{view.par}} 步以内可获三星</text></view>
+  <view class="warning" wx:if="{{error || storageWarning}}">{{error || storageWarning}}</view>
+  <view class="warning" wx:if="{{soundWarning}}">{{soundWarning}}</view>
+  <view class="warning" wx:if="{{musicWarning}}">{{musicWarning}}</view>
+  <view class="level-panel" wx:if="{{showLevels}}">
+    <view class="level-heading"><text>追光旅程</text><button class="text-button" bindtap="toggleLevels">返回游戏 ×</button></view>
+    <text class="description">已点亮 {{view.completed}} / {{view.total}} 个关卡</text>
+    <view class="unlock-rule">通过当前关，才能解锁下一关。</view>
+    <view class="level-list" wx:for="{{view.sections}}" wx:for-item="section" wx:key="index">
+      <view class="section-heading"><text>{{section.title}}</text><text>{{section.completed}} / {{section.choices.length}}</text></view>
+      <button wx:for="{{section.choices}}" wx:key="index" data-index="{{item.index}}" bindtap="onSelect" disabled="{{item.locked}}" class="level-item {{item.active ? 'active' : ''}}"><text class="level-number">{{item.number}}</text><text>{{item.name}}</text><text class="level-status">{{item.stars ? item.starText : item.statusText}}</text></button>
+    </view>
+    <button class="text-button restart-journey" bindtap="askRestart">重新开始闯关</button>
+    <view class="restart-confirm" wx:if="{{restartConfirm}}"><text>将清空星级和解锁进度，从第 1 关重新开始。</text><view class="actions"><button class="secondary" bindtap="cancelRestart">取消</button><button class="secondary hint-button" bindtap="confirmRestart">从第1关开始</button></view></view>
+  </view>
+</view>

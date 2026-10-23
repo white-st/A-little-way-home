@@ -1,0 +1,11 @@
+{
+  "pages": ["pages/game/game"],
+  "window": {
+    "navigationBarTitleText": "循光",
+    "navigationBarBackgroundColor": "#0c1719",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0c1719"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

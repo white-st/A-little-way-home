@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c1719">
+  <title>循光 LUMEN · 让每一束光，找到归处</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23152630'/%3E%3Ccircle cx='16' cy='16' r='10' stroke='%23ddc394' fill='none'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23f1dda7'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/preview/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="循光首页"><span class="brand-mark" aria-hidden="true">◉</span><span>循光<small>LUMEN</small></span></a>
+    <div class="journey"><span class="eyebrow">YOUR LIGHT JOURNEY</span><h2>追光旅程</h2><p>一步一转折，一关一束光。</p></div>
+    <nav id="chapter-tabs" class="chapter-tabs" aria-label="浏览章节"></nav>
+    <p id="level-section-title" class="level-section-title"></p>
+    <nav id="level-list" aria-label="选择关卡"></nav>
+    <p class="unlock-rule">通过当前关，才能解锁下一关。</p>
+    <div class="journey-progress"><div><span>旅程进度</span><span id="completion"></span></div><div class="progress-track"><i id="progress-fill"></i></div></div>
+    <button id="restart-journey" class="restart-journey">重新开始闯关</button>
+    <div id="restart-confirm" class="restart-confirm" hidden role="group" aria-label="重新开始闯关确认"><p>将清空星级和解锁进度，从第 1 关重新开始。</p><div><button id="cancel-restart">取消</button><button id="confirm-restart">从第1关开始</button></div></div>
+    <div class="sidebar-bottom"><span class="little-orbit">✧</span><p>光总会找到路，<br>你也是。</p><small>让好奇心，再多转一个弯。</small></div>
+  </aside>
+  <main>
+    <header class="topbar"><span>旋转线路 · 连通整个世界</span><span class="edition"><i></i><span id="chapter-title"></span></span></header>
+    <section class="play-area">
+      <div class="intro"><div><p class="eyebrow" id="chapter"></p><h1><span id="level-name"></span><span class="title-dot">.</span></h1><p class="description" id="description"></p></div><div class="stage"><span id="stage-number"></span><small id="stage-total"></small></div></div>
+      <div class="play-layout">
+        <div class="game-column">
+          <div class="board-card"><div class="board-top"><span><i class="live-dot"></i>线路实验室 <small id="grid-size"></small></span><span class="counter" id="lamp-counter">点亮 0 / 1</span></div>
+            <div class="audio-controls" role="group" aria-label="声音设置">
+              <div class="audio-row"><button id="music-toggle" class="sound-toggle" role="switch" aria-label="背景音乐" aria-checked="true"><span class="music-note" aria-hidden="true">♪</span><span id="music-label">音乐 开</span><span class="sound-track" aria-hidden="true"></span></button><input id="music-volume" type="range" min="0" max="100" step="1" value="28" aria-label="背景音乐音量"><output id="music-volume-value" for="music-volume">28%</output></div>
+              <div class="audio-row"><button id="sound-toggle" class="sound-toggle" role="switch" aria-label="音效" aria-checked="true"><span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i></span><span id="sound-label">音效 开</span><span class="sound-track" aria-hidden="true"></span></button><input id="sound-volume" type="range" min="0" max="100" step="1" value="65" aria-label="音效音量"><output id="sound-volume-value" for="sound-volume">65%</output></div>
+            </div>
+            <div class="board-wrap"><canvas id="board" aria-label="线路拼接棋盘：旋转每格，从中央电源接通全部节点"></canvas><div id="wire-controls" aria-label="可旋转的线路"></div></div>
+            <div class="board-bottom"><span>轻触线路 <b>·</b> 顺时针旋转 90°</span><span><strong id="moves">0</strong> 次旋转</span></div>
+          </div>
+          <div class="legend"><span><i class="network-dot power"></i>中央电源</span><span><i class="network-dot connected"></i>已通电</span><span><i class="network-dot disconnected"></i>未通电</span></div>
+          <p class="direction-rule">接口相对才能连通 · 全部节点亮起即可过关</p>
+          <div class="actions"><button id="undo" class="secondary">撤销</button><button id="reset" class="secondary">重置</button><button id="hint" class="secondary hint-button"><span>✦</span> 给点提示</button></div>
+          <div class="footnote">不赶时间，慢慢让光找到路。<small id="star-rule"></small></div>
+        </div>
+        <aside class="guide-column">
+          <section class="tip" id="tip-panel"><span class="tip-spark">✦</span><p class="eyebrow">A LITTLE SPARK</p><h2>一点灵感</h2><p id="tip-text" aria-live="polite"></p><div class="tip-divider"></div><div class="wire-examples" aria-label="线路类型：直线、弯线、分叉"><span><b>━</b><small>直线</small></span><span><b>┗</b><small>弯线</small></span><span><b>┳</b><small>分叉</small></span></div><span class="tip-detail">从金色电源出发，沿亮线寻找断口。<br>棋盘边缘的接口，要转向内部。</span></section>
+          <section class="success" id="success-panel" hidden aria-live="polite"><p class="eyebrow" id="success-label">全网已接通</p><div class="success-orbit">☼</div><div class="stars" id="stars"></div><h2 id="success-title">每个节点，都有了光。</h2><p id="success-note"></p><button id="next" class="primary">前往下一关</button></section>
+          <section class="how-to"><span class="mini-label">玩法很简单</span><ol><li><span>01</span>找到中央的金色电源</li><li><span>02</span>旋转线路，让相邻接口对齐</li><li><span>03</span>接通全部节点，点亮整张网络</li></ol></section>
+          <div class="small-note"><span>✧</span> 每一次转向，都是新的可能。</div>
+        </aside>
+      </div>
+    </section>
+    <footer><span>循光 · LUMEN</span><span>让每一束光，找到归处</span></footer>
+    <div id="status" class="status" role="status" hidden></div>
+  </main>
+  <script src="/miniprogram/core/levels.js"></script>
+  <script src="/miniprogram/core/engine.js"></script>
+  <script src="/miniprogram/core/session.js"></script>
+  <script src="/miniprogram/core/motion.js"></script>
+  <script src="/miniprogram/core/animals.js"></script><script src="/miniprogram/core/homecoming.js"></script><script src="/miniprogram/core/renderer.js"></script>
+  <script src="/miniprogram/core/sound.js"></script>
+  <script src="/miniprogram/core/music.js"></script>
+  <script src="/preview/sound-player.js"></script>
+  <script src="/preview/app.js"></script>
+</body>
+</html>

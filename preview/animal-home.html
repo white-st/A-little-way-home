@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>探索新道路 · 动物回家试玩</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#071117;color:#ecf4e9;font:14px system-ui;display:flex;justify-content:center;align-items:center;gap:22px;min-height:100vh;padding:12px}canvas{display:block;width:375px;height:680px;max-width:92vw;touch-action:none;border-radius:16px}aside{width:225px}h1{font-size:22px}p{color:#92aaa9;line-height:1.8}button{width:100%;padding:11px;margin:4px 0;border:1px solid #355247;border-radius:10px;background:#142630;color:#ecf4e9;cursor:pointer}button.primary{background:#80dfc1;color:#16352c}@media(max-width:650px){body{flex-direction:column}aside{width:min(375px,92vw)}}
+</style>
+<canvas id="game" aria-label="动物回家棋盘：转动小路，接动物回中央小屋"></canvas>
+<aside><h1>动物回家</h1><p>全部小路接通后，动物一起沿路回家。第一关只需转动中央的小屋格一次。</p><button data-size="3">3 × 3 试玩</button><button data-size="8">8 × 8 试玩</button><button data-size="9">9 × 9 试玩</button><button id="connect" class="primary">接通剩余道路，观看回家</button><button id="lobby">查看首页</button><p>演示使用独立临时档案，不读取或修改游戏存档。</p></aside>
+<script src="/miniprogram/core/levels.js"></script><script src="/miniprogram/core/engine.js"></script><script src="/miniprogram/core/session.js"></script><script src="/miniprogram/core/profile.js"></script><script src="/miniprogram/core/classic.js"></script><script src="/miniprogram/core/motion.js"></script><script src="/miniprogram/core/animals.js"></script><script src="/miniprogram/core/homecoming.js"></script><script src="/miniprogram/core/renderer.js"></script><script src="/miniprogram/core/sound.js"></script><script src="/miniprogram/core/music.js"></script><script src="/preview/sound-player.js"></script><script src="/preview/minigame-platform.js"></script><script src="/minigame/src/view.js"></script><script src="/minigame/src/application.js"></script>
+<script>
+  const store=new Map(),canvas=document.getElementById('game'),platform=createMinigamePreviewPlatform(canvas);
+  platform.getStorageSync=key=>store.get(key);platform.setStorageSync=(key,value)=>store.set(key,structuredClone(value));
+  let app;
+  function start(size){
+    if(app)app.destroy();store.clear();store.set(LightSound.STORAGE_KEY,false);store.set(LightMusic.STORAGE_KEY,false);
+    store.set(LightSession.STORAGE_KEY,LightLevels.map(level=>level.size<size?3:0));
+    app=new LumenGame.GameApp(platform,{request:cb=>requestAnimationFrame(cb),cancel:id=>cancelAnimationFrame(id)});
+    app.start();app.openCampaign();app.resume();
+  }
+  document.querySelectorAll('[data-size]').forEach(button=>button.onclick=()=>start(Number(button.dataset.size)));
+  document.getElementById('connect').onclick=()=>{
+    if(app.screen!=='game')app.navigate('game');
+    const answer=LightEngine.solve(app.session.game.level,app.session.game.pieces);
+    for(const step of answer.changes)for(let i=0;i<step.turns;i++)app.act('rotate',step.x,step.y);
+  };
+  document.getElementById('lobby').onclick=()=>app.navigate('home');
+  start(3);window.addEventListener('pagehide',()=>app.destroy());
+</script>
+</html>

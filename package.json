@@ -1,0 +1,13 @@
+{
+  "name": "follow-the-light",
+  "version": "0.9.17",
+  "private": true,
+  "description": "探索新道路：旋转小路、帮助动物回家的微信小游戏",
+  "scripts": {
+    "start": "node scripts/serve.js",
+    "build:wechat": "node scripts/build-minigame.js",
+    "pretest": "node scripts/build-minigame.js --check",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": { "node": ">=18" }
+}

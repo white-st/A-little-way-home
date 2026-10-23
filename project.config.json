@@ -1,0 +1,14 @@
+{
+  "description": "探索新道路 · 线路连接解谜",
+  "miniprogramRoot": "minigame/",
+  "projectname": "follow-the-light",
+  "appid": "wxbfabe98c965e5401",
+  "compileType": "game",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": true
+  }
+}

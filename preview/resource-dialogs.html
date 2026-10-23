@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>探索新道路 · 资源弹窗与无限测试</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#e0e8d4;color:#29482e;font:14px system-ui;display:flex;justify-content:center;align-items:center;gap:28px;min-height:100vh;padding:16px}canvas{display:block;width:375px;height:680px;max-width:92vw;touch-action:none;border-radius:18px;box-shadow:0 12px 50px #29482e20}aside{width:240px}h1{font-size:24px}p{color:#617654;line-height:1.8}button,select{width:100%;padding:12px;margin:4px 0;border:1px solid #b8cfa5;border-radius:10px;background:#f6faed;color:#29482e;cursor:pointer}@media(max-width:650px){body{flex-direction:column}aside{width:min(375px,92vw)}}
+</style>
+<canvas id="game" aria-label="探索新道路游戏预览"></canvas>
+<aside><h1>小弹窗，轻松继续</h1><p>点顶部闪电或钻石查看补给。开发版、体验版均可无限使用体力与钻石。</p><label>模拟版本<select id="environment"><option value="develop">开发版</option><option value="trial">体验版</option><option value="release">正式版</option></select></label><button id="restart">关闭游戏并重新进入</button><button id="compact">紧凑手机视窗</button><button id="empty">测试情景：体力和钻石为零</button><p id="status" role="status"></p><details><summary>辅助点击测试</summary><label>当前画面控件<select id="target"></select></label><button id="tap">点击选中控件</button></details><p>此页使用独立的浏览器测试存档，不影响微信中的记录。</p></aside>
+<script src="/miniprogram/core/levels.js"></script><script src="/miniprogram/core/engine.js"></script><script src="/miniprogram/core/session.js"></script><script src="/miniprogram/core/profile.js"></script><script src="/miniprogram/core/classic.js"></script><script src="/miniprogram/core/motion.js"></script><script src="/miniprogram/core/animals.js"></script><script src="/miniprogram/core/homecoming.js"></script><script src="/miniprogram/core/renderer.js"></script><script src="/miniprogram/core/sound.js"></script><script src="/miniprogram/core/music.js"></script><script src="/preview/sound-player.js"></script><script src="/preview/minigame-platform.js"></script><script src="/minigame/src/view.js"></script><script src="/minigame/src/application.js"></script>
+<script>
+const canvas=document.getElementById('game'),platform=createMinigamePreviewPlatform(canvas),prefix='resource-dialogs-0.9.16:';
+platform.getStorageSync=key=>JSON.parse(localStorage.getItem(prefix+key));
+platform.setStorageSync=(key,value)=>localStorage.setItem(prefix+key,JSON.stringify(value));
+let app,compact=false;
+function start(){
+  if(app)app.destroy();
+  platform.getAccountInfoSync=()=>({miniProgram:{envVersion:document.getElementById('environment').value}});
+  app=new LumenGame.GameApp(platform,{request:cb=>requestAnimationFrame(cb),cancel:id=>cancelAnimationFrame(id)});app.start();
+}
+document.getElementById('restart').onclick=start;
+document.getElementById('compact').onclick=()=>{compact=!compact;canvas.style.width=compact?'320px':'375px';canvas.style.height=compact?'568px':'680px';app.resize();};
+document.getElementById('environment').onchange=start;
+document.getElementById('empty').onclick=()=>{app.profile.data.energy=0;app.profile.data.diamonds=0;app.profile.data.energyAt=Date.now();app.saveProfile();app.draw();};
+let targetKey='';
+document.getElementById('tap').onclick=()=>{
+  const target=app.layout.targets[Number(document.getElementById('target').value)];if(!target)return;
+  const finger={identifier:991,clientX:(target.x+target.w/2)*app.scale+app.offsetX,clientY:(target.y+target.h/2)*app.scale};
+  app.touchStart({touches:[finger]});app.touchEnd({touches:[],changedTouches:[finger]});
+};
+const ticker=setInterval(()=>{
+  document.getElementById('status').textContent=`本地实际余额：体力 ${app.profile.data.energy}，钻石 ${app.profile.data.diamonds}。${app.testSupplyEnabled?'本版无限使用，不扣余额。':'本版按正常规则消耗。'}`;
+  const key=app.layout.targets.map(t=>`${t.id}:${t.label}:${t.disabled}`).join('|');
+  if(key!==targetKey){targetKey=key;const select=document.getElementById('target');select.replaceChildren(...app.layout.targets.map((t,i)=>{const option=document.createElement('option');option.value=i;option.textContent=`${t.label||t.id}${t.kind==='slider'?' · 音量滑块':''}${t.disabled?'（不可用）':''}`;return option;}));}
+},200);
+start();window.addEventListener('pagehide',()=>{clearInterval(ticker);app.destroy();});
+</script></html>

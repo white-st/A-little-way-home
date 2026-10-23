@@ -1,0 +1,10 @@
+node_modules/
+project.private.config.json
+.DS_Store
+artifacts/
+Thumbs.db
+*.log
+coverage/
+.env
+.env.*
+!.env.example

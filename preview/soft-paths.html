@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>探索新道路 · 小路优化对比</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:28px;background:#edf3e4;color:#29482e;font:14px system-ui}main{max-width:830px;margin:auto}h1{font-size:25px;margin:0 0 8px}p{color:#617654;line-height:1.8}nav{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}button{border:1px solid #b8cfa5;border-radius:10px;background:#f9fbf3;color:#29482e;padding:10px 16px;cursor:pointer}section{display:flex;gap:22px;flex-wrap:wrap}article{flex:1;min-width:280px;background:#f8fbef;border-radius:22px;padding:18px}h2{font-size:16px;margin:0 0 12px}canvas{width:100%;display:block;border-radius:14px;touch-action:none}footer{margin-top:16px;font-size:13px;color:#617654}
+</style>
+<main><h1>让小路轻一点</h1><p>同一盘道路：细线、柔和转角和更清晰的格子留白。点击右侧棋盘可以旋转。</p>
+<nav><button id="five">5 × 5</button><button id="eight">8 × 8</button><button id="nine">9 × 9</button><button id="connect">全部接通</button><button id="reset">恢复未接通</button><button id="theme">切换深浅主题</button></nav>
+<section><article><h2>调整前</h2><canvas id="before" aria-label="调整前的粗道路"></canvas></article><article><h2>调整后</h2><canvas id="after" aria-label="调整后的细道路，可点击旋转"></canvas></article></section>
+<footer id="status"></footer></main>
+<script src="/miniprogram/core/levels.js"></script><script src="/miniprogram/core/engine.js"></script><script src="/miniprogram/core/session.js"></script><script src="/miniprogram/core/classic.js"></script><script src="/miniprogram/core/motion.js"></script><script src="/miniprogram/core/animals.js"></script>
+<script src="/preview/renderer-before-0.9.3.js"></script><script>const oldRenderer=LightRenderer;</script><script src="/miniprogram/core/renderer.js"></script>
+<script>
+const before=document.getElementById('before'),after=document.getElementById('after'),renderers=[oldRenderer,LightRenderer];
+let size=5,game,light=true,frame;
+function reset(){game=LightEngine.createGame(LightClassic.generate(size,92));renderers.forEach((r,i)=>r.resetMotion([before,after][i].getContext('2d')));}
+function draw(time){
+  for(const [i,canvas] of [before,after].entries()) {
+    const width=canvas.getBoundingClientRect().width,pixels=Math.round(width*devicePixelRatio);
+    if(canvas.width!==pixels){canvas.width=pixels;canvas.height=pixels;}
+    const ctx=canvas.getContext('2d');ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    renderers[i].render(ctx,width,game,time,{light});
+  }
+  document.getElementById('status').textContent=`${size} × ${size} · ${game.result.solved?'道路已全部接通':'道路尚未全部接通'} · ${game.moves} 次旋转`;
+  frame=requestAnimationFrame(draw);
+}
+for(const [id,value] of [['five',5],['eight',8],['nine',9]])document.getElementById(id).onclick=()=>{size=value;reset();};
+document.getElementById('connect').onclick=()=>{const answer=LightEngine.solve(game.level,game.pieces);for(const c of answer.changes)for(let i=0;i<c.turns;i++)LightEngine.rotate(game,c.x,c.y);};
+document.getElementById('reset').onclick=reset;
+document.getElementById('theme').onclick=()=>{light=!light;};
+after.addEventListener('pointerup',e=>{const box=after.getBoundingClientRect(),cell=LightRenderer.hitTest(box.width,size,e.clientX-box.left,e.clientY-box.top);if(cell)LightEngine.rotate(game,cell.x,cell.y);});
+reset();frame=requestAnimationFrame(draw);window.addEventListener('pagehide',()=>cancelAnimationFrame(frame));
+</script></html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>探索新道路 · 连续闯关预览</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#071117;color:#ecf4e9;font:14px system-ui;display:flex;justify-content:center;align-items:center;gap:22px;min-height:100vh;padding:12px}canvas{display:block;width:375px;height:680px;max-width:92vw;touch-action:none;border-radius:16px}aside{width:225px}h1{font-size:22px}p{color:#92aaa9;line-height:1.8}button{width:100%;padding:11px;margin:4px 0;border:1px solid #355247;border-radius:10px;background:#142630;color:#ecf4e9;cursor:pointer}button.primary{background:#80dfc1;color:#16352c}@media(max-width:650px){body{flex-direction:column}aside{width:min(375px,92vw)}}
+</style>
+<canvas id="game" aria-label="动物回家棋盘：转动小路，接动物回中央小屋"></canvas>
+<aside><h1>回家之旅</h1><p>嫩绿森林，逐关解锁。通关后卡片保留星星，可以再次挑战。</p><button id="fresh">新玩家演示</button><button id="legacy">旧成绩保留演示</button><button id="final">最后一关演示</button><button id="reenter">重新进入，保留演示进度</button><button id="compact">紧凑手机视窗</button><button id="connect" class="primary">接通当前关，观看回家</button><p>使用独立临时档案。按钮只用于演示，不进入微信游戏。</p></aside>
+<script src="/miniprogram/core/levels.js"></script><script src="/miniprogram/core/engine.js"></script><script src="/miniprogram/core/session.js"></script><script src="/miniprogram/core/profile.js"></script><script src="/miniprogram/core/classic.js"></script><script src="/miniprogram/core/motion.js"></script><script src="/miniprogram/core/animals.js"></script><script src="/miniprogram/core/homecoming.js"></script><script src="/miniprogram/core/renderer.js"></script><script src="/miniprogram/core/sound.js"></script><script src="/miniprogram/core/music.js"></script><script src="/preview/sound-player.js"></script><script src="/preview/minigame-platform.js"></script><script src="/minigame/src/view.js"></script><script src="/minigame/src/application.js"></script>
+<script>
+  const store=new Map(),canvas=document.getElementById('game'),platform=createMinigamePreviewPlatform(canvas);
+  platform.getStorageSync=key=>store.get(key);platform.setStorageSync=(key,value)=>store.set(key,structuredClone(value));
+  let app;
+  function start(kind='fresh'){
+    if(app)app.destroy();
+    if(kind!=='reenter'){
+      store.clear();store.set(LightSound.STORAGE_KEY,false);store.set(LightMusic.STORAGE_KEY,false);
+      if(kind==='legacy'){
+        const saved=Array(24).fill(0);saved[0]=3;saved[3]=2;saved[18]=1;
+        store.set(LightSession.STORAGE_KEY,saved);
+      }
+      if(kind==='final'){
+        const order=new LightSession.Session().indices(),saved=Array(order.length).fill(3);
+        saved[order[order.length-1]]=0;store.set(LightSession.STORAGE_KEY,saved);
+      }
+    }
+    app=new LumenGame.GameApp(platform,{request:cb=>requestAnimationFrame(cb),cancel:id=>cancelAnimationFrame(id)});
+    app.start();
+  }
+  for(const kind of ['fresh','legacy','final','reenter'])document.getElementById(kind).onclick=()=>start(kind);
+  document.getElementById('compact').onclick=()=>{canvas.style.width='320px';canvas.style.height='568px';app.resize();};
+  document.getElementById('connect').onclick=()=>{
+    if(app.screen!=='game')app.navigate('game');
+    const answer=LightEngine.solve(app.session.game.level,app.session.game.pieces);
+    for(const step of answer.changes)for(let i=0;i<step.turns;i++)app.act('rotate',step.x,step.y);
+  };
+  start();window.addEventListener('pagehide',()=>app.destroy());
+</script>
+</html>
